@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TodoList — Llista de tasques</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        function handleCheckbox(form) {
+            const checkbox = form.querySelector('input[name="filtreComplecioCheckbox"]');
+            const filtreComplecio = form.querySelector('input[name="filtreComplecio"]');
+            filtreComplecio.value = checkbox.checked ? "true" : "false";
+        }
+    </script>
+</head>
+
+<body class="bg-slate-50 min-h-screen font-sans text-slate-800">
+
+    <!-- Navbar -->
+    <nav class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span class="font-semibold text-slate-900 text-lg tracking-tight">TodoList</span>
+            </div>
+            <a th:href="@{/tasques/create}"
+               class="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                </svg>
+                Nova tasca
+            </a>
+        </div>
+    </nav>
+
+    <!-- Error banner -->
+    <div th:if="${errorMessage}"
+         class="max-w-7xl mx-auto px-6 mt-4">
+        <div class="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span th:text="${errorMessage}"></span>
+        </div>
+    </div>
+
+    <!-- Main layout -->
+    <div class="max-w-7xl mx-auto px-6 py-6 flex gap-6">
+
+        <!-- Sidebar de filtres -->
+        <aside class="w-64 shrink-0">
+            <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-5 space-y-5">
+                <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Filtres</h2>
+
+                <!-- Filtre descripció -->
+                <form th:action="@{/}" method="get" class="space-y-2">
+                    <label for="filtreDescripcio" class="block text-sm font-medium text-slate-700">Descripció</label>
+                    <input type="text" id="filtreDescripcio" name="filtreDescripcio"
+                           th:value="${filtreDescripcio}" placeholder="Cerca per text…"
+                           class="w-full text-sm px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition-colors bg-slate-50"/>
+                    <button type="submit"
+                            class="w-full text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg transition-colors">
+                        Filtrar
+                    </button>
+                </form>
+
+                <hr class="border-slate-200"/>
+
+                <!-- Filtre compleció -->
+                <form th:action="@{/}" method="get" onsubmit="handleCheckbox(this)" class="space-y-2">
+                    <input type="hidden" id="filtreComplecio" name="filtreComplecio">
+                    <label class="text-sm font-medium text-slate-700">Estat</label>
+                    <label class="flex items-center gap-2 cursor-pointer mt-1">
+                        <input type="checkbox" id="filtreComplecioCheckbox" name="filtreComplecioCheckbox"
+                               th:checked="${filtreComplecio}"
+                               class="w-4 h-4 accent-indigo-600 rounded"/>
+                        <span class="text-sm text-slate-600">Només completades</span>
+                    </label>
+                    <button type="submit"
+                            class="w-full text-sm font-medium bg-slate-700 hover:bg-slate-800 text-white px-3 py-2 rounded-lg transition-colors">
+                        Aplicar
+                    </button>
+                </form>
+
+                <hr class="border-slate-200"/>
+
+                <!-- Netejar filtres -->
+                <form th:action="@{/}" method="get">
+                    <button type="submit"
+                            class="w-full text-sm font-medium border border-slate-300 hover:bg-slate-100 text-slate-600 px-3 py-2 rounded-lg transition-colors">
+                        Netejar filtres
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- Contingut principal -->
+        <main class="flex-1 min-w-0">
+            <!-- Capçalera -->
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <h1 class="text-xl font-semibold text-slate-900">Tasques</h1>
+                    <span th:text="${nombreTasques}"
+                          class="text-xs font-semibold px-2.5 py-1 bg-indigo-100 text-indigo-700 rounded-full">0</span>
+                </div>
+            </div>
+
+            <!-- Taula -->
+            <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                <table class="min-w-full divide-y divide-slate-200 text-sm">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Descripció</th>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Estat</th>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Prioritat</th>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Data inici</th>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Fi prevista</th>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Fi real</th>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Accions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <tr th:each="tasca : ${tasques}"
+                            class="hover:bg-slate-50 transition-colors"
+                            th:classappend="${tasca.completada ? 'opacity-60' : ''}">
+                            <td class="px-4 py-3 font-medium text-slate-800"
+                                th:text="${tasca.descripcio}"></td>
+                            <td class="px-4 py-3">
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
+                                      th:classappend="${tasca.completada ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
+                                    <svg th:if="${tasca.completada}" class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    <svg th:unless="${tasca.completada}" class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <span th:text="${tasca.completada ? 'Completada' : 'Pendent'}"></span>
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span th:if="${tasca.prioritat != null}"
+                                      class="inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold"
+                                      th:classappend="${tasca.prioritat <= 2 ? 'bg-red-100 text-red-700' : (tasca.prioritat == 3 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600')}"
+                                      th:text="${tasca.prioritat}"></span>
+                                <span th:unless="${tasca.prioritat != null}" class="text-slate-400">—</span>
+                            </td>
+                            <td class="px-4 py-3 text-slate-600" th:text="${tasca.dataInici != null ? tasca.dataInici : '—'}"></td>
+                            <td class="px-4 py-3 text-slate-600" th:text="${tasca.dataFiPrevista != null ? tasca.dataFiPrevista : '—'}"></td>
+                            <td class="px-4 py-3 text-slate-600" th:text="${tasca.dataFiReal != null ? tasca.dataFiReal : '—'}"></td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-2">
+                                    <!-- Completar -->
+                                    <form th:action="@{/tasques/update/{id}/completar(id=${tasca.id})}" method="post">
+                                        <button type="submit" title="Marcar completada"
+                                                class="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                            </svg>
+                                        </button>
+                                    </form>
+                                    <!-- Editar -->
+                                    <form th:action="@{/tasques/edit/{id}(id=${tasca.id})}" method="get">
+                                        <button type="submit" title="Editar"
+                                                class="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50 transition-colors">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                            </svg>
+                                        </button>
+                                    </form>
+                                    <!-- Eliminar -->
+                                    <form th:action="@{/tasques/delete/{id}(id=${tasca.id})}" method="post">
+                                        <button type="submit" title="Eliminar"
+                                                class="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            </svg>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        <!-- Fila buida -->
+                        <tr th:if="${#lists.isEmpty(tasques)}">
+                            <td colspan="7" class="px-4 py-12 text-center text-slate-400 text-sm">
+                                <svg class="w-10 h-10 mx-auto mb-3 text-slate-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                </svg>
+                                No hi ha tasques. Crea'n una nova!
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+</body>
+</html>
